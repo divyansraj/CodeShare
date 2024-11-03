@@ -1,4 +1,4 @@
-import Header from "../components/header";
+import Header from "../components/Header";
 import CodeView from "../components/CodeView";
 import Participants from "../components/Participants";
 import { useEffect, useState } from "react";
