@@ -9,10 +9,11 @@ const { Server } = require("socket.io");
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://code-share-ten.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ["websocket", "polling"],
 });
 
 const userSocketMap = {};
@@ -112,15 +113,21 @@ socket.on("fontsize", ({ roomId, fontSize }) => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://code-share-ten.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   })
 );
 app.use(express.json());
 
+
+app.get("/", (req, res) => {
+  res.send("Hello Server");
+});
+
 const compile = require("./routes/compile");
 app.use("/api", compile);
+
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

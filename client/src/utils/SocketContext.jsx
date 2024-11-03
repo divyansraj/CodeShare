@@ -12,9 +12,9 @@ export const SocketProvider = ({ children }) => {
     const setupSocket = async () => {
       socketRef.current = await initSocket();
 
-      socketRef.current.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-      });
+      // socketRef.current.on("connect_error", (err) => {
+      //   console.error("Socket connection error:", err);
+      // });
 
       setSocketReady(true); // Mark socket as ready once connection is established
     };

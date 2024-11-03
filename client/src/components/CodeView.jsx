@@ -25,11 +25,14 @@ const CodeView = () => {
     if (userCode === ``) return;
 
     try {
-      const res = await Axios.post(`http://localhost:8000/api/compile`, {
-        code: userCode,
-        language: userLang,
-        input: userInput,
-      });
+      const res = await Axios.post(
+        `https://code-share-backend-one.vercel.app/api/compile`,
+        {
+          code: userCode,
+          language: userLang,
+          input: userInput,
+        }
+      );
       const output = res.data.stdout || res.data.stderr;
       setUserOutput(output);
       socketRef.current.emit("output", { roomId, output }); // Emit with roomId
