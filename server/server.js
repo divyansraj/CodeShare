@@ -3,12 +3,19 @@ const cors = require("cors");
 const ACTIONS = require("./Actions");
 const app = express();
 const cookieParser = require("cookie-parser");
-
-
-const PORT = process.env.PORT || 8000;
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const Ably = require("ably");
+const { createAdapter } = require("@ably-labs/socket.io-ably-adapter");
+
+const PORT = process.env.PORT || 8000;
 const server = createServer(app);
+
+// Ably configuration
+
+const ably = new Ably.Realtime(process.env.ABLY_API_KEY);
+
+// Configure Socket.IO with Ably adapter
 const io = new Server(server, {
   cors: {
     origin: [
@@ -21,6 +28,7 @@ const io = new Server(server, {
   },
   transports: ["websocket", "polling"],
 });
+io.adapter(createAdapter(ably));
 
 const userSocketMap = {};
 const roomData = {}; // Object to hold data for each room
@@ -74,35 +82,38 @@ io.on("connection", (socket) => {
   });
 
   // Handle code editing
-socket.on("edit", ({ roomId, content }) => {
-  socket.to(roomId).emit("updateContent", { roomId, updatedContent: content });
-});
+  socket.on("edit", ({ roomId, content }) => {
+    socket
+      .to(roomId)
+      .emit("updateContent", { roomId, updatedContent: content });
+  });
 
-socket.on("input", ({ roomId, input }) => {
-  socket.to(roomId).emit("updatedInput", { roomId, updatedInput: input });
-});
+  socket.on("input", ({ roomId, input }) => {
+    socket.to(roomId).emit("updatedInput", { roomId, updatedInput: input });
+  });
 
-socket.on("output", ({ roomId, output }) => {
-  socket.to(roomId).emit("updatedOutput", { roomId, updatedOutput: output });
-});
+  socket.on("output", ({ roomId, output }) => {
+    socket.to(roomId).emit("updatedOutput", { roomId, updatedOutput: output });
+  });
 
-// Language change event
-socket.on("lang", ({ roomId, lang }) => {
-  socket.to(roomId).emit("updateUserLang", { roomId, updateUserLang: lang });
-});
+  // Language change event
+  socket.on("lang", ({ roomId, lang }) => {
+    socket.to(roomId).emit("updateUserLang", { roomId, updateUserLang: lang });
+  });
 
-// Theme change event
-socket.on("theme", ({ roomId, theme }) => {
-  socket.to(roomId).emit("updateUserTheme", { roomId, updateUserTheme: theme });
-});
+  // Theme change event
+  socket.on("theme", ({ roomId, theme }) => {
+    socket
+      .to(roomId)
+      .emit("updateUserTheme", { roomId, updateUserTheme: theme });
+  });
 
-// Font size change event
-socket.on("fontsize", ({ roomId, fontSize }) => {
-  socket
-    .to(roomId)
-    .emit("updateFontSize", { roomId, updateFontSize: fontSize });
-});
-
+  // Font size change event
+  socket.on("fontsize", ({ roomId, fontSize }) => {
+    socket
+      .to(roomId)
+      .emit("updateFontSize", { roomId, updateFontSize: fontSize });
+  });
 
   socket.on("disconnecting", () => {
     const rooms = [...socket.rooms];
@@ -132,14 +143,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 app.get("/", (req, res) => {
   res.send("Hello Server");
 });
 
 const compile = require("./routes/compile");
 app.use("/api", compile);
-
 
 server.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
